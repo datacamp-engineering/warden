@@ -25,6 +25,10 @@ module Warden
       method_name = "#{scope}_serialize"
       specialized = respond_to?(method_name)
       session[key_for(scope)] = specialized ? send(method_name, user) : serialize(user)
+      if defined?(Rails)
+        msg = "[debug-swapped] warden store before: #{send(method_name, user)&.inspect} after: #{session[key_for(scope)]&.inspect}"
+        Rails.logger.info(msg)
+      end
     end
 
     def fetch(scope)
@@ -33,6 +37,10 @@ module Warden
 
       method_name = "#{scope}_deserialize"
       user = respond_to?(method_name) ? send(method_name, key) : deserialize(key)
+      if defined?(Rails)
+        msg = "[debug-swapped] warden fetch: [[#{user&.id}], #{user&.session_salt}]"
+        Rails.logger.info(msg)
+      end
       delete(scope) unless user
       user
     end
